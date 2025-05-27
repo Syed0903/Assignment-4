@@ -83,18 +83,83 @@ public class Person {
         }    
     }
     
-    public boolean updatePersonalDetails() {
+    public boolean updatePersonalDetails(String newFirstName, String newLastName, String newAddress, String newBirthdate) {
         //TODO: This method allows updating a given person's ID, firstName, lastName, address and birthday in a TXT file.
-        //Changing personal details will not affect their demerit points of the susp helor Siered and checked in the updatperson function.
-        // All relevant conditions discussed for the addPerson function
-        //Condition 1: If a person is under 18, their address cannot be Changed.
-        //Condition 2: If a person's birthday is going to be changed, then no other personal detail (i.e, person's ID, firstName, LastName, address) can be changed.
-        //Condition 3: If the first character/digit of a person's ID is an even number, then their ID cannot be changed.
-        //Instruction: If the Person's updated information meets the above conditions and any other conditions you may want to consider. //the Person's information should be updated in the TXT file with the updated information, and the updatePersonalDetails function should return true.
-        //Otherwise,the Person's updated information should not be updated in the TXT file, and the updatePersonalDetails function should return false.
-        return true;
+        //Changing personal details will not affect their demerit points or the suspension status.
+        // All relevant conditions discussed for the addPerson function also need to be considered and checked in the updatePersonalDetails function.
+        
+        File inputFile = new File("persons.txt");
+        File tempFile = new File("persons_temp.txt");
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+        df.setLenient(false);
+        boolean updated = false;
 
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                if (parts.length != 5) {
+                    writer.write(line);
+                    writer.newLine();
+                    continue;
+                }
+
+                String currentID = parts[0];
+                String currentFirst = parts[1];
+                String currentLast = parts[2];
+                String currentAddress = parts[3];
+                String currentBirthdate = parts[4];
+
+                if (currentID.equals(this.personID)) {
+                    int age = calculateAge(currentBirthdate);
+
+                    boolean birthChanged = !currentBirthdate.equals(newBirthdate);
+                    boolean nameChanged = !currentFirst.equals(newFirstName) || !currentLast.equals(newLastName);
+                    boolean addressChanged = !currentAddress.equals(newAddress);
+
+                    //Condition 1: If a person is under 18, their address cannot be Changed.
+                    if (age < 18 && addressChanged) {
+                        return false;
+                    }
+
+                    //Condition 2: If a person's birthday is going to be changed, then no other personal detail 
+                    //(i.e, person's ID, firstName, LastName, address) can be changed.
+                    if (birthChanged && (nameChanged || addressChanged)) {
+                        return false;
+                    }
+
+                    //Condition 3: If the first character/digit of a person's ID is an even number, then their ID cannot be changed.
+                    //We are not changing ID here, just checking it starts with an even number
+                    char firstChar = personID.charAt(0);
+                    if (Character.isDigit(firstChar) && (firstChar - '0') % 2 == 0) {
+                        // ID is even, not changed — okay
+                    }
+
+                    // Write the updated record
+                    String updatedLine = String.join("|", personID, newFirstName, newLastName, newAddress, newBirthdate);
+                    writer.write(updatedLine);
+                    updated = true;
+                } else {
+                    writer.write(line);
+                }
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (!inputFile.delete()) return false;
+        if (!tempFile.renameTo(inputFile)) return false;
+
+        //Instruction: If the Person's updated information meets the below conditions and any other conditions you may want to consider,
+        //the Person's information should be updated in the TXT file with the updated information, and the updatePersonalDetails function should return true.
+        //Otherwise, the Person's information should not be updated in the TXT file, and the updatePersonalDetails function should return false.
+        return updated;
     }
+
     // Helper function to calculate age in years from DD-MM-YYYY format
     private int calculateAge(String bday) {
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
@@ -119,6 +184,6 @@ public class Person {
         //Instruction: If the above condiations and any other conditions you may want to consider are net, the demerit points for a person should be inserted into the TXT file, //and the addDemeritPoints function should return "Sucess". Otherwise, the addDemeritPoints function should return Failed.
         return "Sucess";
     }
-
+    
 }    
 
