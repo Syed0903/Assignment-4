@@ -1,5 +1,12 @@
 import java.util.HashMap;
 import java.util.Date;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.regex.Pattern;
+
 
 public class Person {
 
@@ -14,16 +21,68 @@ public class Person {
     public boolean addPerson() {
         //TODO: This method adds information about a person to a TXT file.
         //Condition 1: PersonID should be exactly 10 characters long;
-        //the first two characters should be numbers between 2 and 9, there should be at least two special characters between characters 3 and 8, //and the last two characters should be upper case letters (A - 2). Example: "S6s_dSfAB"
+        if (!validatePersonID(personID)) {
+                return false;
+        }
         //Condition 2: The address of the Person should follow the following format: Street Number|Street|City|State|Country.
-        //The State should be only Victoria. Example: 32|Highland Street Melbourne|Victoria (Australia.
+        if (!validateAddress(address)) {
+            return false;
+        }
         //Condition 3: The format of the birth date of the person should follow the following format: DD-MM-YYYY. Example: 15-11-1990
-        //Instruction: If the Person's information meets the above conditions and any other conditions you may want to consider, //the information should be inserted into a TXT file, and the addPerson function should return true.
+        if (!validateBirthdate(birthdate)) {
+            return false;
+        }
         //Otherwise, the information should not be inserted into the TXT file, and the addPerson function should return false. 
-        return true;
-
+        String record = String.join("|",
+            personID,
+            firstName,
+            lastName,
+            address,
+            birthdate
+        );
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("persons.txt", true))) {
+            writer.write(record);
+            writer.newLine();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-
+    //the first two characters should be numbers between 2 and 9, there should be at least two special characters between characters 3 and 8, //and the last two characters should be upper case letters (A - 2). Example: "S6s_dSfAB"
+    private boolean validatePersonID(String id) {
+        if (id == null || id.length() != 10) return false;
+        if (!id.substring(0, 2).matches("[2-9]{2}")) return false;
+        if (!id.substring(8).matches("[A-Z]{2}")) return false;
+        String middle = id.substring(2, 8);
+        long specialCount = middle.chars()
+            .filter(ch -> !Character.isLetterOrDigit(ch))
+            .count();
+        return specialCount >= 2;
+    }
+    
+    //The State should be only Victoria. Example: 32|Highland Street Melbourne|Victoria (Australia.
+    private boolean validateAddress(String addr) {
+        if (addr == null) return false;
+        String[] parts = addr.split("\\|");
+        if (parts.length != 5) return false;
+        String state = parts[3].trim();
+        return "Victoria".equals(state);
+    } 
+      
+    //Instruction: If the Person's information meets the above conditions and any other conditions you may want to consider, //the information should be inserted into a TXT file, and the addPerson function should return true.
+    private boolean validateBirthdate(String bday) {
+        if (bday == null) return false;
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+        df.setLenient(false);
+        try {
+            df.parse(bday);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }    
+    }
+    
     public boolean updatePersonalDetails() {
         //TODO: This method allows updating a given person's ID, firstName, lastName, address and birthday in a TXT file.
         //Changing personal details will not affect their demerit points of the susp helor Siered and checked in the updatperson function.
