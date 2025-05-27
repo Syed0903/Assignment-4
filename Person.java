@@ -95,6 +95,20 @@ public class Person {
         return true;
 
     }
+    // Helper function to calculate age in years from DD-MM-YYYY format
+    private int calculateAge(String bday) {
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+        df.setLenient(false);
+        try {
+            Date birth = df.parse(bday);
+            Date today = new Date();
+            long ageInMillis = today.getTime() - birth.getTime();
+            long millisInYear = 1000L * 60 * 60 * 24 * 365;
+            return (int)(ageInMillis / millisInYear);
+        } catch (ParseException e) {
+            return -1;
+        }
+    }
 
     public String addDemeritPoints() {
         //TODO: This method adds demerit points for a given person in a TXT file.
