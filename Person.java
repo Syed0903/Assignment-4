@@ -185,5 +185,60 @@ public class Person {
         return "Sucess";
     }
     
+        // Helper method to validate the format of date (DD-MM-YYYY)
+    private boolean isValidDate(String dateStr) {
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+        df.setLenient(false);
+        try {
+            df.parse(dateStr);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    // Helper method to validate points (1 to 6)
+    private boolean isValidPoints(int points) {
+        return points >= 1 && points <= 6;
+    }
+
+    // Helper method to calculate age
+    private int calculateAgeFromBirthdate(String birthdate) {
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+        df.setLenient(false);
+        try {
+            Date birthDate = df.parse(birthdate);
+            Date today = new Date();
+            long ageInMillis = today.getTime() - birthDate.getTime();
+            long millisInYear = 1000L * 60 * 60 * 24 * 365;
+            return (int)(ageInMillis / millisInYear);
+        } catch (ParseException e) {
+            return -1;
+        }
+    }
+
+    // Helper method to calculate total points in past 2 years
+    private int calculateRecentPoints(Date offenseDate) {
+        long TWO_YEARS = 1000L * 60 * 60 * 24 * 365 * 2;
+        Date now = new Date();
+        int total = 0;
+
+        for (Date date : demeritPoints.keySet()) {
+            long diff = now.getTime() - date.getTime();
+            if (diff <= TWO_YEARS) {
+                total += demeritPoints.get(date);
+            }
+        }
+
+        // Include the new offense date points too
+        Integer newPoints = demeritPoints.get(offenseDate);
+        if (newPoints != null) {
+            total += newPoints;
+        }
+
+        return total;
+    }
+
+
 }    
 
