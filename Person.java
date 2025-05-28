@@ -175,15 +175,56 @@ public class Person {
         }
     }
 
-    public String addDemeritPoints() {
+    public String addDemeritPoints(String offenseDateStr, int points) {
         //TODO: This method adds demerit points for a given person in a TXT file.
         //Condition 1: The format of the date of the offense should follow the following format: DD-MM-YYYY. Example: 15-11-1990
+        if (!isValidDate(offenseDateStr)) {
+            return "Failed";
+        }
+
         //Condition 2: The demerit points must be a whole number between 1-6
+        if (!isValidPoints(points)) {
+            return "Failed";
+        }
+
         //Condition 3: If the person is under 21, the isSuspended variable should be set to true if the total demerit points within two years exceed 6.
         //If the person is over 21, the isSuspended variable should be set to true if the total demerit points within two years exceed 12.
-        //Instruction: If the above condiations and any other conditions you may want to consider are net, the demerit points for a person should be inserted into the TXT file, //and the addDemeritPoints function should return "Sucess". Otherwise, the addDemeritPoints function should return Failed.
-        return "Sucess";
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+        df.setLenient(false);
+        try {
+            Date offenseDate = df.parse(offenseDateStr);
+
+            if (demeritPoints == null) {
+                demeritPoints = new HashMap<>();
+            }
+
+            demeritPoints.put(offenseDate, points);
+
+            int age = calculateAge(birthdate);
+            int totalPoints = calculatePointsInLastTwoYears(offenseDate);
+
+            if (age < 21 && totalPoints > 6) {
+                isSuspended = true;
+            } else if (age >= 21 && totalPoints > 12) {
+                isSuspended = true;
+            }
+
+            //Instruction: If the above condiations and any other conditions you may want to consider are met,
+            //the demerit points for a person should be inserted into the TXT file,
+            //and the addDemeritPoints function should return "Sucess". Otherwise, the addDemeritPoints function should return Failed.
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("demerits.txt", true))) {
+                String record = personID + "|" + offenseDateStr + "|" + points;
+                writer.write(record);
+                writer.newLine();
+                return "Sucess";
+            }
+
+        } catch (ParseException | IOException e) {
+            e.printStackTrace();
+            return "Failed";
+        }
     }
+
     
         // Helper method to validate the format of date (DD-MM-YYYY)
     private boolean isValidDate(String dateStr) {
